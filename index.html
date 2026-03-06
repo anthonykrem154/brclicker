@@ -1,0 +1,804 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Brainrot Clicker</title>
+
+  <!-- Pixel-ish font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#06110b;
+      --panel:#0b2214;
+      --panel2:#0f2a19;
+      --card:#0a0f0c;
+      --card2:#0c120f;
+      --accent:#00d14a;
+      --accent2:#ff0022;
+      --text:#eafff1;
+      --muted:#a4cdb2;
+      --shadow: 0 18px 60px rgba(0,0,0,.55);
+      --radius: 18px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: "Press Start 2P", system-ui;
+      color:var(--text);
+      background:
+        linear-gradient(180deg, #064681 0%, #2a08695d 100%);
+      overflow-x:hidden;
+    }
+
+    /* Top HUD */
+    .top{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:16px;
+      padding:18px 18px 10px;
+    }
+    .hudLeft{
+      display:flex;
+      gap:14px;
+      align-items:flex-end;
+      min-width: 260px;
+    }
+    .miniLogo{
+      width:56px;
+      height:56px;
+      border-radius: 16px;
+      display:grid;
+      place-items:center;
+      background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.14), transparent 55%),
+                  linear-gradient(135deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.1));
+      border:3px solid rgba(255, 255, 255, 0.45);
+      box-shadow: var(--shadow);
+      font-size:22px;
+      user-select:none;
+    }
+    .statBlock{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      padding-bottom:4px;
+    }
+    .bigCount{
+      font-size:48px;
+      line-height:1;
+      letter-spacing:2px;
+      text-shadow: 0 10px 25px rgba(0,0,0,.55);
+    }
+    .subStats{
+      font-size:16px;
+      color:var(--text);
+      opacity:.95;
+      letter-spacing:1px;
+    }
+
+    .recordBar{
+      margin: 0 18px 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background-color: rgb(255, 255, 255);
+      color:#021108;
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      font-size:14px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    /* Layout like screenshot: left click zone + right shop */
+    .layout{
+      display:grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap:18px;
+      padding: 0 18px 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .clickZone{
+      position:relative;
+      min-height: 560px;
+      border-radius: 0px; /* screenshot is square */
+      overflow:hidden;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(255,255,255,.20), transparent 55%),
+        conic-gradient(from 0deg, rgba(255,255,255,.18), rgba(255, 255, 255, 0.2), rgba(255,255,255,.12), rgba(255, 255, 255, 0.18), rgba(255,255,255,.14));
+      box-shadow: var(--shadow);
+      border: 4px solid rgba(255, 255, 255, 0.35);
+    }
+
+    .clickBtn{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      border:0;
+      background: transparent;
+      cursor:pointer;
+      display:grid;
+      place-items:center;
+      user-select:none;
+      outline:none;
+    }
+
+    /* Big “brainrot” logo */
+    .rotWrap{
+      width:min(520px, 80%);
+      aspect-ratio: 1 / 1;
+      display:grid;
+      place-items:center;
+      position:relative;
+      filter: drop-shadow(0 18px 30px rgba(0,0,0,.45));
+    }
+
+    .rotText{
+      position:absolute;
+      bottom: -12px;
+      font-size: 14px;
+      color: rgba(2,17,8,.95);
+      background: rgba(168, 132, 11, 0.75);
+      padding:10px 12px;
+      border-radius: 14px;
+      border: 3px solid rgba(0,0,0,.18);
+      letter-spacing: 1px;
+    }
+
+    .float{
+      position:fixed;
+      pointer-events:none;
+      font-weight:900;
+      text-shadow: 0 10px 25px rgba(0,0,0,.55);
+      transform: translate(-50%,-50%);
+      animation: up .75s ease forwards;
+      z-index:999;
+    }
+    @keyframes up{
+      from{opacity:0; transform:translate(-50%,-10%) scale(.95)}
+      20%{opacity:1}
+      to{opacity:0; transform:translate(-50%,-90%) scale(1.05)}
+    }
+
+    /* Shop */
+    .shop{
+      position:relative;
+      background: rgba(0,0,0,.12);
+      border-radius: 22px;
+      padding: 10px;
+      border: 1px solid rgba(255,255,255,.06);
+      box-shadow: var(--shadow);
+      max-height: 590px;
+      overflow:auto;
+    }
+    .shop::-webkit-scrollbar{width:10px}
+    .shop::-webkit-scrollbar-thumb{background: rgba(255,255,255,.18); border-radius:10px}
+    .shop::-webkit-scrollbar-track{background: rgba(0,0,0,.18); border-radius:10px}
+
+    .card{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      padding: 14px 14px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(10, 1, 41, 0.92), rgba(3, 6, 17, 0.92));
+      border: 2px solid rgba(255,255,255,.10);
+      margin-bottom: 12px;
+    }
+    .icon{
+      width:64px;
+      height:64px;
+      border-radius: 18px;
+      display:grid;
+      place-items:center;
+      background: rgba(5, 112, 173, 0.12);
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      font-size:28px;
+      user-select:none;
+      flex:0 0 auto;
+    }
+    .main{
+      flex:1;
+      min-width: 0;
+    }
+    .name{
+      font-size:18px;
+      letter-spacing:1px;
+      margin-bottom:8px;
+    }
+    .desc{
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      font-size:14px;
+      color: rgba(234,255,241,.85);
+      line-height:1.25;
+    }
+    .buy{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      align-items:flex-end;
+      min-width: 150px;
+    }
+    .btn{
+      font-family: "Press Start 2P", system-ui;
+      font-size:14px;
+      padding: 12px 12px;
+      border-radius: 12px;
+      border: 3px solid rgba(255,255,255,.25);
+      background: rgba(0,0,0,.0);
+      color: var(--text);
+      cursor:pointer;
+      transition: transform .08s ease, filter .2s ease;
+      width: 100%;
+      text-align:center;
+    }
+    .btn:hover{filter: brightness(1.08)}
+    .btn:active{transform: translateY(1px)}
+    .btn:disabled{opacity:.45; cursor:not-allowed; filter:none}
+
+    .rowBtns{
+      display:flex;
+      gap:10px;
+      padding: 0 18px 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .smallBtn{
+      font-family: "Press Start 2P", system-ui;
+      font-size:12px;
+      padding: 12px 12px;
+      border-radius: 12px;
+      border: 2px solid rgba(255,255,255,.18);
+      background: rgba(0,0,0,.18);
+      color: rgba(234,255,241,.9);
+      cursor:pointer;
+    }
+
+    @media (max-width: 980px){
+      .layout{grid-template-columns: 1fr; }
+      .shop{max-height: none}
+      .bigCount{font-size:40px}
+    }
+    .rotWrap{
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.brainrotImg{
+  width: 500px;
+  max-width: 90%;
+  height: auto;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  filter: drop-shadow(0 25px 40px rgba(0,0,0,.6));
+  transition: transform .08s ease;
+}
+
+.clickBtn:active .brainrotImg{
+  transform: scale(.95);
+}
+
+.rotText{
+  position:absolute;
+  bottom: 20px;
+  left:50%;
+  transform: translateX(-50%);
+  background: rgba(122, 106, 32, 0.473);
+  color:#021108;
+  font-family: "Press Start 2P", monospace;
+  font-size:14px;
+  padding:10px 14px;
+  border-radius:12px;
+  border:3px solid rgba(0,0,0,.2);
+  letter-spacing:1px;
+}
+.clickZone{
+  position:relative;
+  height: 520px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:3px solid #ffffff;
+}
+
+.clickBtn{
+  width:100%;
+  height:100%;
+  border:0;
+  background:transparent;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  position:relative;
+  cursor:pointer;
+}
+
+.brainrotImg{
+  width:500px;
+  max-width:60%;
+  height:auto;
+  object-fit:contain;
+  pointer-events:none;
+  user-select:none;
+  filter: drop-shadow(0 25px 40px rgba(0,0,0,.6));
+  transition: transform .08s ease;
+}
+
+.clickBtn:active .brainrotImg{
+  transform: scale(.95);
+}
+
+.rotText{
+  position:absolute;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#cfcfcf;
+  color:#001b0a;
+  padding:10px 14px;
+  border-radius:10px;
+  font-size:12px;
+}
+
+/* 3) Add this CSS (for the image icon inside the circle) */
+.shopIconImg{
+  width: 60px;
+  height: 65px;
+  object-fit: contain;        /* makes black svg white */
+  pointer-events: none;
+  user-select: none;
+}
+
+.charSwitch{
+  position:absolute;
+  right:14px;
+  top:14px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  z-index:5;
+}
+
+.charSwitch button{
+  font-family:"Press Start 2P", system-ui;
+  font-size:10px;
+  padding:10px 12px;
+  border-radius:12px;
+  border:2px solid rgba(255,255,255,.35);
+  background: rgba(0,0,0,.25);
+  color: #fff;
+  cursor:pointer;
+}
+.charSwitch button:hover{
+  background: rgba(255,255,255,.20);
+}
+  </style>
+</head>
+
+<body>
+  <div class="top">
+    <div class="hudLeft">
+      <div class="miniLogo"><img src="https://images.jammable.com/voices/tralalero-tralala-r7NdJ/1d67e039-1e0c-46a1-9f69-f7a66ad2452a.png" width="50px" alt=""></div>
+      <div class="statBlock">
+        <div class="bigCount" id="count">0</div>
+        <div class="subStats">BRAINROT PER SECOND: <span id="bps">0</span></div>
+      </div>
+    </div>
+
+    <div style="text-align:right; padding-bottom:6px;">
+    </div>
+  </div>
+
+  <div class="recordBar" id="recordBar">
+    RECORD: 0 BRAINROT
+  </div>
+
+<div class="layout">
+  <!-- LEFT -->
+  <section class="clickZone" id="clickZone">
+    <button class="clickBtn" id="clickBtn" aria-label="Click to gain brainrot">
+      <img class="brainrotImg"
+           src="https://www.pngmart.com/files/24/Tung-Tung-Tung-Sahur-PNG-HD-Isolated.png"
+           alt="brainrot"
+           draggable="false"/>
+      <div class="rotText">CLICK FOR BRAINROT</div>
+    </button>
+
+    <!-- character switch buttons -->
+    <div class="charSwitch">
+      <button type="button" onclick="setCharacter('tung')">Tung</button>
+      <button type="button" onclick="setCharacter('duck')">Ballerina</button>
+      <button type="button" onclick="setCharacter('Lavaca')">Lavaca</button>
+      <button type="button" onclick="setCharacter('dragon')">Dragon</button>
+    </div>
+  </section>
+
+  <!-- RIGHT -->
+  <aside class="shop" id="shop"></aside>
+</div>
+
+
+
+
+
+  <script>
+    // ===== Brainrot Clicker (ONE FILE) =====
+// 1) Put this URL at the top of your <script> (anywhere before ITEMS)
+const CURSOR_ICON_URL = "https://www.pngarts.com/files/18/Chimpanzini-Bananini-PNG-HQ-Pic.png";
+const AUTO_LOGO = "https://tr.rbxcdn.com/180DAY-308310f72b54e617e6039983ffa8987e/420/420/LayeredAccessory/Webp/noFilter";
+const TIM_LOGO = "https://tr.rbxcdn.com/180DAY-f02a81f3dbc7c68926bd5a7a55a9427d/420/420/BackAccessory/Webp/noFilter";
+const KARKER_LOGO = "https://tr.rbxcdn.com/180DAY-8a6e9e223e46a9abfeda6649b5316cff/420/420/WaistAccessory/Webp/noFilter";
+const SPAGET_LOPO = "https://cdn.gameboost.com/itemoffers/49445/gallery/conversions/fe5007f5-3b73-4757-8dc0-36defb27d6b8-webp.webp?v=1760398922";
+const JELLY_LOGO = "https://tr.rbxcdn.com/180DAY-91516711cd409754e140c20153a0155e/420/420/BackAccessory/Webp/noFilter";
+const SIX_SEV_LOGO = "https://tr.rbxcdn.com/180DAY-652828d331013309a54bd152e5a70de8/420/420/BackAccessory/Webp/noFilter";
+const CHARACTERS = [
+  {
+    id: "tung",
+    name: "Tung Sahur",
+    img: "https://www.pngmart.com/files/24/Tung-Tung-Tung-Sahur-PNG-HD-Isolated.png",
+    size: 420,
+    price: 0 // free free
+  },
+  {
+    id: "duck",
+    name: "Ballerina Cappuccina",
+    img: "https://www.pngmart.com/files/24/Ballerina-Cappuccina-PNG-Clipart.png",
+    size: 300,
+    price: 250
+  },
+  {
+    id: "Lavaca",
+    name: "Lavaca",
+    img: "https://tr.rbxcdn.com/180DAY-1ae71ae503ddb05d83824c03c18018c2/420/420/ShoulderAccessory/Webp/noFilter",
+    size: 420,
+    price: 500 // moneyyy
+  },
+  {
+    id: "dragon",
+    name: "dragon",
+    img: "https://tr.rbxcdn.com/180DAY-1d901fc5fc28cd19166a00d631f37107/420/420/BackAccessory/Webp/noFilter",
+    price: 1500 // expensive dragon
+  }
+];
+let currentCharacter = "tung";
+/* ✅ REPLACE your setCharacter + equipCharacter with this (money unlock system) */
+function setCharacter(id){
+  const char = CHARACTERS.find(c => c.id === id) || CHARACTERS[0];
+
+  // if already unlocked -> equip
+  if (state.unlockedChars[char.id]){
+    equipCharacter(char);
+    return;
+  }
+
+  const price = Number(char.price) || 0;
+
+  // not enough money popup
+  if (state.brainrot < price){
+    alert(`You need ${price} brainrot to buy ${char.name}.`);
+    return;
+  }
+
+  // buy + unlock
+  state.brainrot -= price;
+  state.unlockedChars[char.id] = true;
+
+  alert(`Unlocked ${char.name}! ✅`);
+  equipCharacter(char);
+
+  render();
+  saveGame(); // saves unlock + money
+}
+
+
+/* ✅ ADD these save/load functions (you were calling SAVE_KEY + saveGame but they weren't defined) */
+const SAVE_KEY = "brainrot_clicker_save_v2";
+
+function saveGame(){
+
+}
+
+function loadGame(){
+
+  if(!raw) return;
+  try{
+    const data = JSON.parse(raw);
+    state = {
+      ...state,
+      ...data,
+      owned: data.owned || {},
+      unlockedChars: data.unlockedChars || { tung:true }
+    };
+  }catch{}
+}
+
+function equipCharacter(char){
+  currentCharacter = char.id;
+
+  const img = document.querySelector(".brainrotImg");
+  img.src = char.img;
+
+  const w = Number(char.size) || 420;
+  img.style.width = w + "px";
+  img.style.maxWidth = "80%";
+
+ 
+}
+
+function equipCharacter(char){
+  currentCharacter = char.id;
+
+  const img = document.querySelector(".brainrotImg");
+  img.src = char.img;
+
+  const w = Number(char.size) || 420;
+  img.style.width = w + "px";
+  img.style.maxWidth = "80%";
+
+}
+    const elCount = document.getElementById("count");
+    const elBps = document.getElementById("bps");
+    const elRecordBar = document.getElementById("recordBar");
+    const clickBtn = document.getElementById("clickBtn");
+    const clickZone = document.getElementById("clickZone");
+    const shopEl = document.getElementById("shop");
+    const saveBtn = document.getElementById("saveBtn");
+    const resetBtn = document.getElementById("resetBtn");
+
+    const fmt = (n) => {
+      n = Number(n) || 0;
+      if (n < 1000) return Math.floor(n).toString();
+      const u = ["K","M","B","T","Q"];
+      let i=-1, x=n;
+      while (x>=1000 && i<u.length-1){ x/=1000; i++; }
+      return `${x.toFixed(x>=100?0:x>=10?1:2)}${u[i]}`;
+    };
+
+    const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+    // Items mimic the screenshot style
+    const ITEMS = [
+// 2) Change your cursor item to use an <img> as the icon
+{
+  id:"cursor",
+  name:"Banana-Start",
+  icon:`<img class="shopIconImg" src="${CURSOR_ICON_URL}" alt="Cursor">`,
+  desc:"Increases click power by 1 brainrot.",
+  type:"click",
+  value:1,
+  baseCost:25,
+  growth:1.15
+},
+      {
+        id:"auto",
+        name:"Coco Brainrot",
+        icon:`<img class="shopIconImg" src="${AUTO_LOGO}" alt="Cursor">`,
+        desc:"Increases brainrot per second by 1.",
+        type:"bps",
+        value:1,
+        baseCost:100,
+        growth:1.17
+      },
+      {
+        id:"mine",
+        name:"Brainrot Tim",
+        icon:`<img class="shopIconImg" src="${TIM_LOGO}" alt="Cursor">`,
+        desc:"Increases brainrot per second by 10.",
+        type:"bps",
+        value:10,
+        baseCost:500,
+        growth:1.18
+      },
+      {
+        id:"valk",
+        name:"Karkerkar Kurkur",
+        icon:`<img class="shopIconImg" src="${KARKER_LOGO}" alt="Cursor">`,
+        desc:"Increases brainrot per second by 100.",
+        type:"bps",
+        value:100,
+        baseCost:5000,
+        growth:1.19
+      },
+      {
+        id:"sigma",
+        name:"Spaghetti Toiletti",
+        icon:`<img class="shopIconImg" src="${SPAGET_LOPO}" alt="Cursor">`,
+        desc:"Multiplies click power by 2 (stacks).",
+        type:"click_mult",
+        value:2,
+        baseCost:2000,
+        growth:1.22
+      },
+            {
+        id:"sigma1",
+        name:"Graipuss Medussi",
+        icon:`<img class="shopIconImg" src="${JELLY_LOGO}" alt="Cursor">`,
+        desc:"Multiplies click power by 4 (stacks).",
+        type:"click_mult",
+        value:4,
+        baseCost:67000,
+        growth:1.24
+      },
+                  {
+        id:"sigma1",
+        name:"Six-Seven",
+        icon:`<img class="shopIconImg" src="${SIX_SEV_LOGO}" alt="Cursor">`,
+        desc:"Multiplies click power by 6/7 (stacks).",
+        type:"click_mult",
+        value:6,
+        baseCost:670000,
+        growth:1.24
+      }
+    ];
+
+let state = {
+  brainrot: 0,
+  record: 0,
+  bps: 0,
+  clickPower: 1,
+  clickMult: 1,
+  owned: {},
+  unlockedChars: { tung: true },
+  lastTick: Date.now()
+};
+
+    function owned(id){ return state.owned[id] || 0; }
+
+    function cost(item){
+      const c = owned(item.id);
+      return Math.floor(item.baseCost * Math.pow(item.growth, c));
+    }
+
+    function recompute(){
+      // click power = base + cursor upgrades, times multipliers
+      const cursorCount = owned("cursor");
+      state.clickPower = (1 + cursorCount) * state.clickMult;
+
+      // bps from auto + mine + valk
+      const auto = owned("auto") * 1;
+      const mine = owned("mine") * 10;
+      const valk = owned("valk") * 100;
+      state.bps = auto + mine + valk;
+
+      // record
+      if (state.brainrot > state.record) state.record = state.brainrot;
+    }
+
+    function render(){
+      elCount.textContent = fmt(state.brainrot);
+      elBps.textContent = fmt(state.bps);
+
+      elRecordBar.textContent = `RECORD: 999999999999999999 BRAINROT BY: ANTHONY`;
+
+      // shop
+      shopEl.innerHTML = "";
+      ITEMS.forEach(item=>{
+        const price = cost(item);
+        const count = owned(item.id);
+
+        const card = document.createElement("div");
+        card.className = "card";
+
+        card.innerHTML = `
+          <div class="icon">${item.icon}</div>
+          <div class="main">
+            <div class="name">${item.name}</div>
+            <div class="desc">${item.desc}</div>
+            <div class="desc" style="margin-top:8px; color: rgba(164,205,178,.9);">
+              Owned: ${count}
+            </div>
+          </div>
+          <div class="buy">
+            <button class="btn" ${state.brainrot < price ? "disabled" : ""}>
+              Buy for ${fmt(price)}
+            </button>
+          </div>
+        `;
+
+        card.querySelector("button").onclick = () => buy(item);
+        shopEl.appendChild(card);
+      });
+    }
+
+    function floatText(text, x, y){
+      const el = document.createElement("div");
+      el.className = "float";
+      el.textContent = text;
+      el.style.left = x + "px";
+      el.style.top = y + "px";
+      el.style.fontSize = "18px";
+      document.body.appendChild(el);
+      setTimeout(()=>el.remove(), 800);
+    }
+
+    function clickGain(e){
+      const rect = clickZone.getBoundingClientRect();
+      const x = e?.clientX ?? (rect.left + rect.width/2);
+      const y = e?.clientY ?? (rect.top + rect.height/2);
+
+      state.brainrot += state.clickPower;
+      if (state.brainrot > state.record) state.record = state.brainrot;
+
+      floatText(`+${fmt(state.clickPower)}`, x, y);
+      render();
+    }
+
+    function buy(item){
+      const price = cost(item);
+      if (state.brainrot < price) return;
+
+      state.brainrot -= price;
+      state.owned[item.id] = owned(item.id) + 1;
+
+      if (item.type === "click"){
+        // handled by recompute via cursor count
+      } else if (item.type === "bps"){
+        // handled by recompute via counts
+      } else if (item.type === "click_mult"){
+        // multiply click mult each purchase
+        state.clickMult *= item.value;
+        state.clickMult = clamp(state.clickMult, 1, 1024);
+      }
+
+      recompute();
+      render();
+    }
+
+    function save(){
+    }
+
+    function load(){
+      if (!raw) return false;
+      try{
+        const data = JSON.parse(raw);
+        if (!data || typeof data !== "object") return false;
+        state = { ...state, ...data, owned: data.owned || {} };
+        return true;
+      }catch{
+        return false;
+      }
+    }
+
+    function reset(){
+      if (!confirm("Reset your brainrot save?")) return;
+      location.reload();
+    }
+
+    // ticks (bps)
+    setInterval(()=>{
+      recompute();
+      if (state.bps > 0){
+        state.brainrot += state.bps;
+        if (state.brainrot > state.record) state.record = state.brainrot;
+        render();
+      }
+    }, 1000);
+
+    // autosave
+
+    // events
+    clickBtn.addEventListener("click", clickGain);
+
+ /* ✅ FIX your init at the bottom (replace your load() call with loadGame()) */
+loadGame();
+recompute();
+render();
+
+// load last selected character OR default
+  </script>
+</body>
+</html>
