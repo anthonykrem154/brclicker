@@ -3,6 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
+  <link rel="icon" type="image/x-icon" href="favicon.png">
+  <link rel="apple-touch-icon" href="favicon.png">
   <title>Brainrot Clicker</title>
 
   <!-- Pixel-ish font -->
@@ -387,6 +390,14 @@
 .charSwitch button:hover{
   background: rgba(255,255,255,.20);
 }
+#overlay{
+  position:fixed;
+  inset:0;
+  backdrop-filter: blur(6px);
+  background: rgba(0,0,0,0.3);
+  display:none;
+  z-index:9998;
+}
   </style>
 </head>
 
@@ -400,6 +411,7 @@
       </div>
     </div>
 <button class="smallBtn" id="musicBtn">🔊 Music: ON</button>
+<button class="smallBtn" id="statsBtn">📊 Stats</button>
     <div style="text-align:right; padding-bottom:6px;">
     </div>
   </div>
@@ -427,11 +439,38 @@
       <button type="button" onclick="setCharacter('dragon')">Dragon</button>
     </div>
   </section>
-
+<div id="overlay"></div>
   <!-- RIGHT -->
   <aside class="shop" id="shop"></aside>
 </div>
+<div id="statsPopup" style="
+  display:none;
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  width:320px;
+  max-width:90%;
+  background:#111;
+  color:#fff;
+  border:3px solid rgba(255,255,255,.2);
+  border-radius:16px;
+  padding:18px;
+  z-index:9999;
+  box-shadow:0 20px 50px rgba(0,0,0,.6);
+">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+    <div style="font-size:14px;">📊 STATS</div>
+    <button id="closeStatsBtn" class="smallBtn" style="padding:8px 10px; font-size:10px;">X</button>
+  </div>
 
+  <div id="statsContent" style="
+    font-family:system-ui, Arial, sans-serif;
+    font-size:14px;
+    line-height:1.7;
+    color:#ddd;
+  "></div>
+</div>
 
 
 
@@ -458,6 +497,11 @@ musicBtn.onclick = () => {
   }
 };
 
+const statsBtn = document.getElementById("statsBtn");
+const statsPopup = document.getElementById("statsPopup");
+const closeStatsBtn = document.getElementById("closeStatsBtn");
+const statsContent = document.getElementById("statsContent");
+
 // first click starts music
 document.body.addEventListener("click", () => {
   if(musicOn){
@@ -466,9 +510,6 @@ document.body.addEventListener("click", () => {
 }, { once: true });
 
 
-document.body.addEventListener("click", () => {
-  bgMusic.play().catch(()=>{});
-}, { once: true });
     // ===== Brainrot Clicker (ONE FILE) =====
 // 1) Put this URL at the top of your <script> (anywhere before ITEMS)
 const CURSOR_ICON_URL = "https://www.pngarts.com/files/18/Chimpanzini-Bananini-PNG-HQ-Pic.png";
@@ -689,7 +730,10 @@ let state = {
   clickMult: 1,
   owned: {},
   unlockedChars: { tung: true },
-  lastTick: Date.now()
+  lastTick: Date.now(),
+  totalClicks: 0,
+  totalEarned: 0,
+  bestClick: 0
 };
 
 const ACHIEVEMENTS = [
@@ -707,6 +751,30 @@ function checkAchievements(){
       showAchievement(a.name);
     }
   });
+}
+
+
+
+const overlay = document.getElementById("overlay");
+
+function openStats(){
+  overlay.style.display = "block";   // blur background
+  statsPopup.style.display = "block"; // popup stays sharp
+  renderStats();
+}
+
+function closeStats(){
+  overlay.style.display = "none";
+  statsPopup.style.display = "none";
+}
+function renderStats(){
+  statsContent.innerHTML = `
+    <div><b>Total Clicks:</b> ${fmt(state.totalClicks)}</div>
+    <div><b>Total Earned:</b> ${fmt(state.totalEarned)}</div>
+    <div><b>Best Click:</b> ${fmt(state.bestClick)}</div>
+    <div><b>Current Brainrot:</b> ${fmt(state.brainrot)}</div>
+    <div><b>Brainrot Per Second:</b> ${fmt(state.bps)}</div>
+  `;
 }
 
 function showAchievement(text){
@@ -814,10 +882,18 @@ function clickGain(e){
 
   state.brainrot += gain;
 
-  checkAchievements(); // ✅ IMPORTANT
+  // ✅ ADD THESE
+  state.totalClicks += 1;
+  state.totalEarned += gain;
+  if(gain > state.bestClick) state.bestClick = gain;
+
+  checkAchievements();
 
   floatText(`+${fmt(gain)}`, x, y);
   render();
+
+  // ✅ update stats if open
+  if(statsPopup.style.display === "block") renderStats();
 }
 
     function buy(item){
@@ -856,21 +932,32 @@ function clickGain(e){
       }
     }
 
+statsBtn.onclick = openStats;
+closeStatsBtn.onclick = closeStats;
+
     function reset(){
       if (!confirm("Reset your brainrot save?")) return;
       location.reload();
     }
 
     // ticks (bps)
-    setInterval(()=>{checkAchievements();
-      recompute();
-      if (state.bps > 0){
-        state.brainrot += state.bps;
-        if (state.brainrot > state.record) state.record = state.brainrot;
-        render();
-      }
-    }, 1000);
+setInterval(()=>{
+  checkAchievements();
+  recompute();
 
+  if (state.bps > 0){
+    state.brainrot += state.bps;
+
+    // ✅ ADD THIS
+    state.totalEarned += state.bps;
+
+    if (state.brainrot > state.record) state.record = state.brainrot;
+
+    render();
+
+    if(statsPopup.style.display === "block") renderStats();
+  }
+}, 1000);
     // autosave
 
     // events
