@@ -399,7 +399,7 @@
         <div class="subStats">BRAINROT PER SECOND: <span id="bps">0</span></div>
       </div>
     </div>
-
+<button class="smallBtn" id="musicBtn">🔊 Music: ON</button>
     <div style="text-align:right; padding-bottom:6px;">
     </div>
   </div>
@@ -437,6 +437,38 @@
 
 
   <script>
+const MUSIC_URL = "musica.mp3";
+const bgMusic = new Audio(MUSIC_URL);
+bgMusic.loop = true;
+bgMusic.volume = 0.4;
+
+let musicOn = true;
+
+const musicBtn = document.getElementById("musicBtn");
+
+musicBtn.onclick = () => {
+  musicOn = !musicOn;
+
+  if(musicOn){
+    bgMusic.play().catch(()=>{});
+    musicBtn.textContent = "🔊 Music: ON";
+  }else{
+    bgMusic.pause();
+    musicBtn.textContent = "🔇 Music: OFF";
+  }
+};
+
+// first click starts music
+document.body.addEventListener("click", () => {
+  if(musicOn){
+    bgMusic.play().catch(()=>{});
+  }
+}, { once: true });
+
+
+document.body.addEventListener("click", () => {
+  bgMusic.play().catch(()=>{});
+}, { once: true });
     // ===== Brainrot Clicker (ONE FILE) =====
 // 1) Put this URL at the top of your <script> (anywhere before ITEMS)
 const CURSOR_ICON_URL = "https://www.pngarts.com/files/18/Chimpanzini-Bananini-PNG-HQ-Pic.png";
@@ -569,10 +601,13 @@ function equipCharacter(char){
       return `${x.toFixed(x>=100?0:x>=10?1:2)}${u[i]}`;
     };
 
+
     const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
     // Items mimic the screenshot style
     const ITEMS = [
 // 2) Change your cursor item to use an <img> as the icon
+
+
 {
   id:"cursor",
   name:"Banana-Start",
@@ -623,32 +658,33 @@ function equipCharacter(char){
         baseCost:2000,
         growth:1.22
       },
-            {
-        id:"sigma1",
-        name:"Graipuss Medussi",
-        icon:`<img class="shopIconImg" src="${JELLY_LOGO}" alt="Cursor">`,
-        desc:"Multiplies click power by 4 (stacks).",
-        type:"click_mult",
-        value:4,
-        baseCost:67000,
-        growth:1.24
-      },
-                  {
-        id:"sigma1",
-        name:"Six-Seven",
-        icon:`<img class="shopIconImg" src="${SIX_SEV_LOGO}" alt="Cursor">`,
-        desc:"Multiplies click power by 6/7 (stacks).",
-        type:"click_mult",
-        value:6,
-        baseCost:670000,
-        growth:1.24
-      }
+{
+  id:"sigma1",
+  name:"Graipuss Medussi",
+  icon:`<img class="shopIconImg" src="${JELLY_LOGO}" alt="Cursor">`,
+  desc:"Multiplies click power by 4 (stacks).",
+  type:"click_mult",
+  value:4,
+  baseCost:67000,
+  growth:1.24
+},
+{
+  id:"sixseven",
+  name:"Six-Seven",
+  icon:`<img class="shopIconImg" src="${SIX_SEV_LOGO}" alt="Cursor">`,
+  desc:"Multiplies click power by 6 (stacks).",
+  type:"click_mult",
+  value:6,
+  baseCost:670000,
+  growth:1.24
+}
     ];
 
 let state = {
   brainrot: 0,
   record: 0,
   bps: 0,
+  achievements: {},
   clickPower: 1,
   clickMult: 1,
   owned: {},
@@ -656,12 +692,51 @@ let state = {
   lastTick: Date.now()
 };
 
+const ACHIEVEMENTS = [
+  { id:"a1", name:"Beginner", goal:100 },
+  { id:"a2", name:"Grinder", goal:1000 },
+  { id:"a3", name:"Addicted 💀", goal:10000 },
+  { id:"a4", name:"No Life", goal:100000 }
+];
+
+
+function checkAchievements(){
+  ACHIEVEMENTS.forEach(a => {
+    if(state.brainrot >= a.goal && !state.achievements[a.id]){
+      state.achievements[a.id] = true;
+      showAchievement(a.name);
+    }
+  });
+}
+
+function showAchievement(text){
+  const el = document.createElement("div");
+
+  el.textContent = "🏆 " + text;
+  el.style.position = "fixed";
+  el.style.bottom = "20px";
+  el.style.right = "20px";
+  el.style.background = "#111";
+  el.style.color = "#fff";
+  el.style.padding = "12px 16px";
+  el.style.borderRadius = "10px";
+  el.style.zIndex = "9999";
+  el.style.fontSize = "12px";
+
+  document.body.appendChild(el);
+
+  setTimeout(()=> el.remove(), 3000);
+}
+
+
     function owned(id){ return state.owned[id] || 0; }
 
     function cost(item){
       const c = owned(item.id);
       return Math.floor(item.baseCost * Math.pow(item.growth, c));
     }
+
+
 
     function recompute(){
       // click power = base + cursor upgrades, times multipliers
@@ -725,17 +800,25 @@ let state = {
       setTimeout(()=>el.remove(), 800);
     }
 
-    function clickGain(e){
-      const rect = clickZone.getBoundingClientRect();
-      const x = e?.clientX ?? (rect.left + rect.width/2);
-      const y = e?.clientY ?? (rect.top + rect.height/2);
+function clickGain(e){
+  const rect = clickZone.getBoundingClientRect();
+  const x = e?.clientX ?? (rect.left + rect.width/2);
+  const y = e?.clientY ?? (rect.top + rect.height/2);
 
-      state.brainrot += state.clickPower;
-      if (state.brainrot > state.record) state.record = state.brainrot;
+  let gain = state.clickPower;
 
-      floatText(`+${fmt(state.clickPower)}`, x, y);
-      render();
-    }
+  if(Math.random() < 0.1){
+    gain *= 5;
+    floatText("Nice!", x, y - 30);
+  }
+
+  state.brainrot += gain;
+
+  checkAchievements(); // ✅ IMPORTANT
+
+  floatText(`+${fmt(gain)}`, x, y);
+  render();
+}
 
     function buy(item){
       const price = cost(item);
@@ -779,7 +862,7 @@ let state = {
     }
 
     // ticks (bps)
-    setInterval(()=>{
+    setInterval(()=>{checkAchievements();
       recompute();
       if (state.bps > 0){
         state.brainrot += state.bps;
@@ -794,7 +877,6 @@ let state = {
     clickBtn.addEventListener("click", clickGain);
 
  /* ✅ FIX your init at the bottom (replace your load() call with loadGame()) */
-loadGame();
 recompute();
 render();
 
