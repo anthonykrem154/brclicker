@@ -974,7 +974,7 @@
       ">
     <div style="display:flex; gap:8px;">
   <button id="chatSendBtn" class="smallBtn" style="padding:10px 12px;">Send</button>
-  <button id="chatClearBtn" class="smallBtn" style="padding:10px 12px;">Clear</button>
+  <button id="chatClearBtn" class="smallBtn" style="padding:10px 12px; display:none;">Clear</button>
 </div>
   </div>
 </div>
@@ -1541,6 +1541,15 @@ function closeAdminPassword(){
 }
 
 function tryAdminPassword(){
+  if(adminPasswordInput.value === ADMIN_PASSWORD){
+  adminUnlocked = true;
+
+  // 👇 ADD THIS
+  chatClearBtn.style.display = "inline-block";
+
+  closeAdminPassword();
+  openAdminConsole();
+}
   if(adminPasswordInput.value === ADMIN_PASSWORD){
     adminUnlocked = true;
     closeAdminPassword();
