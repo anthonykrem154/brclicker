@@ -47,6 +47,7 @@
       gap:16px;
       padding:18px 18px 10px;
     }
+    
     .hudLeft{
       display:flex;
       gap:14px;
@@ -390,6 +391,12 @@
 .charSwitch button:hover{
   background: rgba(255,255,255,.20);
 }
+
+@keyframes fadeInOut{
+  0% {opacity:0; transform:translate(-50%, -30%) scale(.9);}
+  10%,80% {opacity:1; transform:translate(-50%, 0%) scale(1);}
+  100% {opacity:0; transform:translate(-50%, 10%) scale(1.1);}
+}
 #overlay{
   position:fixed;
   inset:0;
@@ -400,7 +407,20 @@
 }
   </style>
 </head>
-
+<div id="playerNameDisplay" style="
+  position:fixed;
+  top:10px;
+  right:10px;
+  background:rgba(0,0,0,.4);
+  border:1px solid rgba(255,255,255,.2);
+  padding:8px 12px;
+  border-radius:10px;
+  font-size:12px;
+  color:#7ee7ff;
+  z-index:9999;
+">
+  👤 ...
+</div>
 <body>
   <div class="top">
     <div class="hudLeft">
@@ -473,9 +493,196 @@
 </div>
 
 
+<div id="adminPasswordPopup" style="
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.45);
+  backdrop-filter:blur(6px);
+  z-index:10000;
+  align-items:center;
+  justify-content:center;
+">
+  <div style="
+    width:360px;
+    max-width:92%;
+    background:linear-gradient(180deg, rgba(20,20,35,.96), rgba(8,8,18,.96));
+    border:1px solid rgba(255,255,255,.15);
+    border-radius:18px;
+    padding:18px;
+    box-shadow:0 20px 60px rgba(0,0,0,.6);
+    color:#fff;
+  ">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div style="font-size:15px;">🔒 ADMIN LOGIN</div>
+      <button id="closeAdminPasswordPopup" class="smallBtn" style="padding:8px 10px;font-size:10px;">X</button>
+    </div>
+
+    <div style="font-family:system-ui,Arial,sans-serif;font-size:14px;color:#cfcfcf;margin-bottom:10px;">
+      Enter admin password
+    </div>
+
+    <input
+      id="adminPasswordInput"
+      type="password"
+      placeholder="Password..."
+      style="
+        width:100%;
+        padding:12px;
+        border-radius:10px;
+        border:1px solid rgba(255,255,255,.14);
+        background:#0b1020;
+        color:white;
+        outline:none;
+        margin-bottom:12px;
+      "
+    >
+
+    <button id="adminPasswordSubmit" class="smallBtn" style="width:100%;">UNLOCK</button>
+
+    <div id="adminPasswordError" style="
+      display:none;
+      margin-top:10px;
+      color:#ff7b7b;
+      font-family:system-ui,Arial,sans-serif;
+      font-size:13px;
+    ">Wrong password</div>
+  </div>
+</div>
+<div id="namePopup" style="
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.5);
+  backdrop-filter:blur(6px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:10000;
+">
+  <div style="
+    width:360px;
+    max-width:92%;
+    background:#0b1020;
+    border:1px solid rgba(255,255,255,.15);
+    border-radius:18px;
+    padding:20px;
+    color:white;
+    text-align:center;
+  ">
+    <h3 style="margin-top:0;">👤 Enter Your Name</h3>
+
+    <input id="nameInput" placeholder="Your name..."
+      style="
+        width:100%;
+        padding:12px;
+        margin-top:10px;
+        border-radius:10px;
+        border:1px solid rgba(255,255,255,.2);
+        background:#05070d;
+        color:white;
+      "
+    >
+
+    <button id="saveNameBtn" class="smallBtn" style="margin-top:12px;width:100%;">
+      Start Game
+    </button>
+  </div>
+</div>
 
 
+<div id="announcementBox" style="
+  display:none;
+  position:fixed;
+  top:20%;
+  left:50%;
+  transform:translateX(-50%);
+  background:rgba(0,0,0,.85);
+  border:2px solid #7ee7ff;
+  padding:20px 30px;
+  border-radius:16px;
+  color:#fff;
+  font-size:20px;
+  font-weight:900;
+  text-align:center;
+  z-index:99999;
+  box-shadow:0 20px 60px rgba(0,0,0,.6);
+  animation: fadeInOut 3s ease;
+">
+</div>
+
+<div id="adminConsole" style="
+  display:none;
+  position:fixed;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+  width:520px;
+  max-width:92%;
+  background:rgba(8,12,20,.96);
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:16px;
+  box-shadow:0 20px 60px rgba(0,0,0,.6);
+  z-index:10001;
+  color:#7ee7ff;
+  overflow:hidden;
+">
+  <div style="
+    padding:12px 14px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+    font-size:13px;
+    color:#c7f7ff;
+    background:rgba(255,255,255,.03);
+  ">⚡ ADMIN ABUSE CONSOLE</div>
+
+  <div id="adminOutput" style="
+    height:220px;
+    overflow:auto;
+    padding:12px;
+    font-family:monospace;
+    font-size:14px;
+    line-height:1.5;
+    background:#05070d;
+  ">> console ready...
+  </div>
+
+  <div style="
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 12px;
+    border-top:1px solid rgba(255,255,255,.08);
+    background:#0a1020;
+  ">
+    <span style="font-family:monospace;color:#7ee7ff;">></span>
+    <div id="adminSuggestions" style="
+  display:none;
+  background:#081018;
+  border-top:1px solid rgba(255,255,255,.08);
+  max-height:140px;
+  overflow:auto;
+  font-family:monospace;
+  font-size:14px;
+"></div>
+    <input id="adminCommandInput" type="text" placeholder="type command..."
+      style="
+        flex:1;
+        background:transparent;
+        border:none;
+        outline:none;
+        color:#7ee7ff;
+        font-family:monospace;
+        font-size:14px;
+      ">
+  </div>
+</div>
+
+
+
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <script>
+    
 const MUSIC_URL = "https://image2url.com/r2/default/audio/1775007312662-6a87f7d1-3897-4ab3-8895-cab4c0f18c61.mp3";
 const bgMusic = new Audio(MUSIC_URL);
 bgMusic.loop = true;
@@ -496,6 +703,19 @@ musicBtn.onclick = () => {
     musicBtn.textContent = "🔇 Music: OFF";
   }
 };
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBFt1HGfakR4xgUgzqTpOb7KSZ5hcUmSa0",
+  authDomain: "niceboyyy-b5099.firebaseapp.com",
+  databaseURL: "https://niceboyyy-b5099-default-rtdb.firebaseio.com",
+  projectId: "niceboyyy-b5099",
+  storageBucket: "niceboyyy-b5099.firebasestorage.app",
+  messagingSenderId: "308046298259",
+  appId: "1:308046298259:web:7ae58e85f824a178f76166"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
 const statsBtn = document.getElementById("statsBtn");
 const statsPopup = document.getElementById("statsPopup");
@@ -578,6 +798,13 @@ function setCharacter(id){
   saveGame(); // saves unlock + money
 }
 
+const playerNameDisplay = document.getElementById("playerNameDisplay");
+
+function updateNameDisplay(){
+  if(playerName){
+    playerNameDisplay.textContent = "👤 " + playerName;
+  }
+}
 
 /* ✅ ADD these save/load functions (you were calling SAVE_KEY + saveGame but they weren't defined) */
 const SAVE_KEY = "brainrot_clicker_save_v2";
@@ -868,6 +1095,23 @@ function showAchievement(text){
       setTimeout(()=>el.remove(), 800);
     }
 
+
+const announcementBox = document.getElementById("announcementBox");
+
+function showAnnouncement(text){
+  announcementBox.textContent = text;
+  announcementBox.style.display = "block";
+
+  // restart animation
+  announcementBox.style.animation = "none";
+  announcementBox.offsetHeight; // force reflow
+  announcementBox.style.animation = "fadeInOut 3s ease";
+
+  setTimeout(() => {
+    announcementBox.style.display = "none";
+  }, 3000);
+}
+
 function clickGain(e){
   const rect = clickZone.getBoundingClientRect();
   const x = e?.clientX ?? (rect.left + rect.width/2);
@@ -963,11 +1207,414 @@ setInterval(()=>{
     // events
     clickBtn.addEventListener("click", clickGain);
 
+    const ADMIN_PASSWORD = "d";
+
+const adminPasswordPopup = document.getElementById("adminPasswordPopup");
+const closeAdminPasswordPopup = document.getElementById("closeAdminPasswordPopup");
+const adminPasswordInput = document.getElementById("adminPasswordInput");
+const adminPasswordSubmit = document.getElementById("adminPasswordSubmit");
+const adminPasswordError = document.getElementById("adminPasswordError");
+
+let adminUnlocked = false;
+
+function openAdminPasswordPopup(){
+  adminPasswordPopup.style.display = "flex";
+  adminPasswordError.style.display = "none";
+  adminPasswordInput.value = "";
+  setTimeout(() => adminPasswordInput.focus(), 30);
+}
+
+function closeAdminPassword(){
+  adminPasswordPopup.style.display = "none";
+}
+
+function tryAdminPassword(){
+  if(adminPasswordInput.value === ADMIN_PASSWORD){
+    adminUnlocked = true;
+    closeAdminPassword();
+    openAdminConsole();
+  } else {
+    adminPasswordError.style.display = "block";
+    adminPasswordInput.value = "";
+    adminPasswordInput.focus();
+  }
+}
+
+
+const adminSuggestions = document.getElementById("adminSuggestions");
+
+const ADMIN_COMMANDS = [
+  "help",
+  "close",
+  "money",
+  "moneymax",
+  "maxclick",
+  "normalclick",
+  "bps",
+  "stopbps",
+  "unlockall",
+  "lockchars",
+  "troll",
+  "fix",
+  "statsmax",
+  "statsreset",
+  "reset",
+  "announce "
+];
+
+function renderAdminSuggestions(value){
+  const q = value.trim().toLowerCase();
+
+  if(!q){
+    adminSuggestions.style.display = "none";
+    adminSuggestions.innerHTML = "";
+    return;
+  }
+
+  const matches = ADMIN_COMMANDS.filter(cmd => cmd.startsWith(q));
+
+  if(matches.length === 0){
+    adminSuggestions.style.display = "none";
+    adminSuggestions.innerHTML = "";
+    return;
+  }
+
+  adminSuggestions.style.display = "block";
+  adminSuggestions.innerHTML = "";
+
+  matches.forEach(cmd => {
+    const div = document.createElement("div");
+    div.textContent = cmd;
+    div.style.padding = "10px 12px";
+    div.style.cursor = "pointer";
+    div.style.color = "#7ee7ff";
+    div.style.borderBottom = "1px solid rgba(255,255,255,.05)";
+
+    div.onmouseenter = () => {
+      div.style.background = "rgba(126,231,255,.12)";
+    };
+
+    div.onmouseleave = () => {
+      div.style.background = "transparent";
+    };
+
+    div.onclick = () => {
+      adminCommandInput.value = cmd;
+      adminSuggestions.style.display = "none";
+      adminSuggestions.innerHTML = "";
+      adminCommandInput.focus();
+    };
+
+    adminSuggestions.appendChild(div);
+  });
+}
+
+document.addEventListener("keydown", (e) => {
+  const tag = document.activeElement?.tagName;
+  if(tag === "INPUT" || tag === "TEXTAREA") return;
+
+  if(e.key === "F8"){
+    e.preventDefault();
+
+    if(adminUnlocked){
+      if(adminConsole.style.display === "block"){
+        closeAdminConsole();
+      } else {
+        openAdminConsole();
+      }
+    } else {
+      openAdminPasswordPopup();
+    }
+  }
+});
+
+closeAdminPasswordPopup.onclick = closeAdminPassword;
+
+adminPasswordPopup.onclick = (e) => {
+  if(e.target === adminPasswordPopup){
+    closeAdminPassword();
+  }
+};
+
+adminPasswordSubmit.onclick = tryAdminPassword;
+
+adminPasswordInput.addEventListener("keydown", (e) => {
+  if(e.key === "Enter"){
+    tryAdminPassword();
+  }
+});
+
+const namePopup = document.getElementById("namePopup");
+const nameInput = document.getElementById("nameInput");
+const saveNameBtn = document.getElementById("saveNameBtn");
+
+let playerName = localStorage.getItem("playerName");
+
+function checkName(){
+  if(playerName){
+    namePopup.style.display = "none";
+  } else {
+    namePopup.style.display = "flex";
+    setTimeout(() => nameInput.focus(), 50);
+  }
+}
+
+
+
+
+function saveName(){
+  const name = nameInput.value.trim();
+
+  if(name.length < 2){
+    alert("enter a valid name");
+    return;
+  }
+
+  playerName = name;
+  localStorage.setItem("playerName", name);
+
+  namePopup.style.display = "none";
+
+  updateNameDisplay(); // 👈 ADD THIS
+
+  alert("welcome " + name + " 🔥");
+}
+
+saveNameBtn.onclick = saveName;
+
+nameInput.addEventListener("keydown", (e)=>{
+  if(e.key === "Enter"){
+    saveName();
+  }
+});
+
+const adminConsole = document.getElementById("adminConsole");
+const adminOutput = document.getElementById("adminOutput");
+const adminCommandInput = document.getElementById("adminCommandInput");
+
+function logAdmin(text){
+  adminOutput.innerHTML += "<br>> " + text;
+  adminOutput.scrollTop = adminOutput.scrollHeight;
+}
+
+function openAdminConsole(){
+  adminConsole.style.display = "block";
+  setTimeout(() => adminCommandInput.focus(), 30);
+}
+
+function closeAdminConsole(){
+  adminConsole.style.display = "none";
+}
+
+function runAdminCommand(raw){
+  const parts = raw.trim().toLowerCase().split(" ");
+  const cmd = parts[0];
+  const amount = Number(parts[1]);
+
+  if(!cmd) return;
+
+  logAdmin(cmd + (parts[1] ? " " + parts[1] : ""));
+
+  if(cmd === "help"){
+    logAdmin("commands:");
+    logAdmin("- help");
+    logAdmin("- close");
+    logAdmin("- money [amount]");
+    logAdmin("- moneymax");
+    logAdmin("- maxclick");
+    logAdmin("- normalclick");
+    logAdmin("- bps");
+    logAdmin("- stopbps");
+    logAdmin("- unlockall");
+    logAdmin("- lockchars");
+    logAdmin("- troll");
+    logAdmin("- fix");
+    logAdmin("- statsmax");
+    logAdmin("- statsreset");
+    logAdmin("- reset");
+    logAdmin("- announce");
+  }
+
+  else if(cmd === "close"){
+    logAdmin("closing console...");
+    setTimeout(closeAdminConsole, 200);
+  }
+else if(cmd === "announce"){
+  const message = parts.slice(1).join(" ");
+
+  if(!message){
+    logAdmin("usage: announce your message");
+    return;
+  }
+
+  db.ref("brainrotClicker/announcement").set({
+    text: message,
+    time: Date.now(),
+    by: playerName || "Admin"
+  });
+
+  logAdmin("announcement sent to all players");
+}
+
+  else if(cmd === "money"){
+    const give = !isNaN(amount) && amount > 0 ? amount : 100000;
+    state.brainrot += give;
+    if(state.brainrot > state.record) state.record = state.brainrot;
+    state.totalEarned += give;
+    render();
+    if(statsPopup.style.display === "block") renderStats();
+    logAdmin("gave " + fmt(give) + " brainrot");
+  }
+
+  else if(cmd === "moneymax"){
+    state.brainrot += 999999999;
+    if(state.brainrot > state.record) state.record = state.brainrot;
+    state.totalEarned += 999999999;
+    render();
+    if(statsPopup.style.display === "block") renderStats();
+    logAdmin("gave max money");
+  }
+
+  else if(cmd === "maxclick"){
+    state.clickMult = 999;
+    recompute();
+    render();
+    if(statsPopup.style.display === "block") renderStats();
+    logAdmin("max click enabled");
+  }
+
+  else if(cmd === "normalclick"){
+    state.clickMult = 1;
+    recompute();
+    render();
+    if(statsPopup.style.display === "block") renderStats();
+    logAdmin("click power reset to normal");
+  }
+
+  else if(cmd === "bps"){
+    state.owned.auto = 999;
+    state.owned.mine = 999;
+    state.owned.valk = 999;
+    recompute();
+    render();
+    if(statsPopup.style.display === "block") renderStats();
+    logAdmin("huge bps enabled");
+  }
+
+  else if(cmd === "stopbps"){
+    state.owned.auto = 0;
+    state.owned.mine = 0;
+    state.owned.valk = 0;
+    recompute();
+    render();
+    if(statsPopup.style.display === "block") renderStats();
+    logAdmin("bps stopped");
+  }
+
+  else if(cmd === "unlockall"){
+    ITEMS.forEach(item => {
+      state.owned[item.id] = 999;
+    });
+
+    CHARACTERS.forEach(char => {
+      state.unlockedChars[char.id] = true;
+    });
+
+    recompute();
+    render();
+    if(statsPopup.style.display === "block") renderStats();
+    logAdmin("everything unlocked");
+  }
+
+  else if(cmd === "lockchars"){
+    state.unlockedChars = { tung: true };
+    render();
+    if(statsPopup.style.display === "block") renderStats();
+    logAdmin("all extra characters locked");
+  }
+
+  else if(cmd === "troll"){
+    document.body.classList.add("shake-active");
+    setTimeout(() => {
+      document.body.classList.remove("shake-active");
+    }, 1500);
+    logAdmin("troll mode enabled");
+  }
+
+  else if(cmd === "fix"){
+    document.body.classList.remove("shake-active");
+    recompute();
+    render();
+    if(statsPopup.style.display === "block") renderStats();
+    logAdmin("game fixed");
+  }
+
+  else if(cmd === "statsmax"){
+    state.totalClicks = 999999;
+    state.totalEarned = 999999999;
+    state.bestClick = 999999;
+    if(statsPopup.style.display === "block") renderStats();
+    logAdmin("stats maxed");
+  }
+
+  else if(cmd === "statsreset"){
+    state.totalClicks = 0;
+    state.totalEarned = 0;
+    state.bestClick = 0;
+    if(statsPopup.style.display === "block") renderStats();
+    logAdmin("stats reset");
+  }
+
+  else if(cmd === "reset"){
+    state.brainrot = 0;
+    state.record = 0;
+    state.bps = 0;
+    state.achievements = {};
+    state.clickPower = 1;
+    state.clickMult = 1;
+    state.owned = {};
+    state.unlockedChars = { tung: true };
+    state.totalClicks = 0;
+    state.totalEarned = 0;
+    state.bestClick = 0;
+
+    recompute();
+    render();
+    if(statsPopup.style.display === "block") renderStats();
+    logAdmin("full game reset");
+  }
+
+  else{
+    logAdmin("unknown command");
+  }
+}
+adminCommandInput.addEventListener("input", () => {
+  renderAdminSuggestions(adminCommandInput.value);
+});
+
+
+adminCommandInput.addEventListener("keydown", (e) => {
+  if(e.key === "Escape"){
+    closeAdminConsole();
+  }
+});
+
+adminCommandInput.addEventListener("keydown", (e) => {
+  if(e.key === "Enter"){
+    runAdminCommand(adminCommandInput.value);
+    adminCommandInput.value = "";
+    adminSuggestions.style.display = "none";
+    adminSuggestions.innerHTML = "";
+  }
+});
  /* ✅ FIX your init at the bottom (replace your load() call with loadGame()) */
 recompute();
 render();
 
 // load last selected character OR default
+
   </script>
+  
+  
 </body>
 </html>
