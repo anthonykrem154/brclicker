@@ -972,7 +972,10 @@
         padding:10px;
         outline:none;
       ">
-    <button id="chatSendBtn" class="smallBtn" style="padding:10px 12px;">Send</button>
+    <div style="display:flex; gap:8px;">
+  <button id="chatSendBtn" class="smallBtn" style="padding:10px 12px;">Send</button>
+  <button id="chatClearBtn" class="smallBtn" style="padding:10px 12px;">Clear</button>
+</div>
   </div>
 </div>
 
@@ -1026,7 +1029,8 @@ document.body.addEventListener("click", () => {
     bgMusic.play().catch(()=>{});
   }
 }, { once: true });
-
+const CHAT_CLEAR_PASSWORD = "d";
+const chatClearBtn = document.getElementById("chatClearBtn");
 
     // ===== Brainrot Clicker (ONE FILE) =====
 // 1) Put this URL at the top of your <script> (anywhere before ITEMS)
@@ -1395,20 +1399,30 @@ function showAchievement(text){
 
 
 const announcementBox = document.getElementById("announcementBox");
+let lastAnnouncementTime = 0;
 
 function showAnnouncement(text){
   announcementBox.textContent = text;
   announcementBox.style.display = "block";
 
-  // restart animation
   announcementBox.style.animation = "none";
-  announcementBox.offsetHeight; // force reflow
+  announcementBox.offsetHeight;
   announcementBox.style.animation = "fadeInOut 3s ease";
 
   setTimeout(() => {
     announcementBox.style.display = "none";
   }, 3000);
 }
+
+db.ref("brainrotClicker/announcement").on("value", (snapshot) => {
+  const data = snapshot.val();
+  if(!data || !data.time) return;
+
+  if(data.time !== lastAnnouncementTime){
+    lastAnnouncementTime = data.time;
+    showAnnouncement((data.by ? data.by + ": " : "") + data.text);
+  }
+});
 
 function clickGain(e){
   const rect = clickZone.getBoundingClientRect();
@@ -1943,11 +1957,39 @@ chatInput.addEventListener("keydown", (e) => {
   }
 });
 
+function clearChat(){
+  const entered = prompt("Enter clear chat password:");
+  if(entered === null) return;
 
-db.ref("brainrotClicker/chat").limitToLast(40).on("child_added", (snapshot) => {
+  if(entered !== CHAT_CLEAR_PASSWORD){
+    alert("Wrong password");
+    return;
+  }
+
+  db.ref("brainrotClicker/chat").remove()
+    .then(() => {
+      chatMessages.innerHTML = "";
+      alert("Chat cleared");
+    })
+    .catch(() => {
+      alert("Failed to clear chat");
+    });
+}
+
+chatClearBtn.onclick = clearChat;
+
+
+db.ref("brainrotClicker/chat").limitToLast(40).on("value", (snapshot) => {
+  chatMessages.innerHTML = "";
+
   const data = snapshot.val();
   if(!data) return;
-  addChatMessage(data.name || "Player", data.text || "");
+
+  Object.values(data).forEach(msg => {
+    addChatMessage(msg.name || "Player", msg.text || "");
+  });
+
+  chatMessages.scrollTop = chatMessages.scrollHeight;
 });
 
 adminCommandInput.addEventListener("keydown", (e) => {
