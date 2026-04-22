@@ -651,6 +651,18 @@
     font-size:12px !important;
   }
 }
+#langSelect {
+  background: #1e4f8a;   /* blue like your UI */
+  color: white;
+  border: 2px solid rgba(255,255,255,.3);
+  border-radius: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+#langSelect option {
+  background: #1e4f8a;  /* same blue */
+  color: white;
+}
   </style>
 </head>
 <body>
@@ -673,11 +685,22 @@
       <div class="miniLogo"><img src="https://images.jammable.com/voices/tralalero-tralala-r7NdJ/1d67e039-1e0c-46a1-9f69-f7a66ad2452a.png" width="50px" alt=""></div>
       <div class="statBlock">
         <div class="bigCount" id="count">0</div>
-        <div class="subStats">BRAINROT PER SECOND: <span id="bps">0</span></div>
+        <div class="subStats">
+  <span id="bpsLabel">BRAINROT PER SECOND</span>: 
+  <span id="bps">0</span>
+</div>
       </div>
     </div>
-<button class="smallBtn" id="musicBtn">🔊 Music: ON</button>
-<button class="smallBtn" id="statsBtn">📊 Stats</button>
+    <button class="smallBtn" id="musicBtn">🔊 Music: ON</button>
+
+<div style="display:flex; gap:10px; align-items:center;">
+  <button class="smallBtn" id="statsBtn">📊 Stats</button>
+
+  <select id="langSelect" class="smallBtn">
+    <option value="en">🇺🇸 EN</option>
+    <option value="ru">🇷🇺 RU</option>
+  </select>
+</div>
     <div style="text-align:right; padding-bottom:6px;">
     </div>
   </div>
@@ -694,7 +717,7 @@
            src="https://www.pngmart.com/files/24/Tung-Tung-Tung-Sahur-PNG-HD-Isolated.png"
            alt="brainrot"
            draggable="false"/>
-      <div class="rotText">CLICK FOR BRAINROT</div>
+     <div class="rotText" id="clickText">CLICK FOR BRAINROT</div>
     </button>
 
     <!-- character switch buttons -->
@@ -704,11 +727,13 @@
       <button type="button" onclick="setCharacter('Lavaca')">Lavaca</button>
       <button type="button" onclick="setCharacter('dragon')">Dragon</button>
     </div>
+    
   </section>
 <div id="overlay"></div>
   <!-- RIGHT -->
   <aside class="shop" id="shop"></aside>
 </div>
+
 <div id="statsPopup" style="
   display:none;
   position:fixed;
@@ -1005,6 +1030,68 @@ musicBtn.onclick = () => {
   }
 };
 
+const LANG = {
+  en: {
+    stats: "Stats",
+    send: "Send",
+    clear: "Clear",
+    chat: "Global Chat",
+    frozen: "❄️ GAME FROZEN",
+    unfrozen: "🔥 GAME UNFROZEN",
+    bps: "BRAINROT PER SECOND",
+    click: "CLICK FOR BRAINROT",
+    buy: "Buy for",
+    owned: "Owned",
+    music: "Music: ON"
+  },
+
+  ru: {
+    stats: "Статистика",
+    send: "Отправить",
+    clear: "Очистить",
+    chat: "Глобальный чат",
+    frozen: "❄️ ИГРА ЗАМОРОЖЕНА",
+    unfrozen: "🔥 ИГРА РАЗМОРОЖЕНА",
+    bps: "БРЕЙНРОТ В СЕКУНДУ",
+    click: "НАЖМИ ДЛЯ БРЕЙНРОТА",
+    buy: "Купить за",
+    owned: "Куплено",
+    music: "Музыка: ВКЛ"
+  }
+};
+
+let currentLang = localStorage.getItem("lang") || "en";
+
+function applyLanguage(){
+  const t = LANG[currentLang];
+
+  document.getElementById("statsBtn").textContent = t.stats;
+  document.getElementById("chatSendBtn").textContent = t.send;
+
+  if(document.getElementById("chatClearBtn")){
+    document.getElementById("chatClearBtn").textContent = t.clear;
+  }
+
+  document.getElementById("bpsLabel").textContent = t.bps;
+  document.getElementById("clickText").textContent = t.click;
+
+  const musicBtn = document.getElementById("musicBtn");
+  if(musicBtn) musicBtn.textContent = t.music;
+
+  renderShop(); // 🔥 VERY IMPORTANT
+}
+
+
+const langSelect = document.getElementById("langSelect");
+
+langSelect.value = currentLang;
+
+langSelect.onchange = () => {
+  currentLang = langSelect.value;
+  localStorage.setItem("lang", currentLang);
+  applyLanguage();
+};
+
 const firebaseConfig = {
   apiKey: "AIzaSyBFt1HGfakR4xgUgzqTpOb7KSZ5hcUmSa0",
   authDomain: "niceboyyy-b5099.firebaseapp.com",
@@ -1185,69 +1272,116 @@ function equipCharacter(char){
 
 {
   id:"cursor",
-  name:"Banana-Start",
-  icon:`<img class="shopIconImg" src="${CURSOR_ICON_URL}" alt="Cursor">`,
-  desc:"Increases click power by 1 brainrot.",
+  name:{
+    en:"Banana-Start",
+    ru:"Банан-Старт"
+  },
+  desc:{
+    en:"Increases click power by 1 brainrot.",
+    ru:"Увеличивает силу клика на 1."
+  },
+  icon:`<img class="shopIconImg" src="${CURSOR_ICON_URL}">`,
   type:"click",
   value:1,
   baseCost:25,
   growth:1.15
 },
-      {
-        id:"auto",
-        name:"Coco Brainrot",
-        icon:`<img class="shopIconImg" src="${AUTO_LOGO}" alt="Cursor">`,
-        desc:"Increases brainrot per second by 1.",
-        type:"bps",
-        value:1,
-        baseCost:100,
-        growth:1.17
-      },
-      {
-        id:"mine",
-        name:"Brainrot Tim",
-        icon:`<img class="shopIconImg" src="${TIM_LOGO}" alt="Cursor">`,
-        desc:"Increases brainrot per second by 10.",
-        type:"bps",
-        value:10,
-        baseCost:500,
-        growth:1.18
-      },
-      {
-        id:"valk",
-        name:"Karkerkar Kurkur",
-        icon:`<img class="shopIconImg" src="${KARKER_LOGO}" alt="Cursor">`,
-        desc:"Increases brainrot per second by 100.",
-        type:"bps",
-        value:100,
-        baseCost:5000,
-        growth:1.19
-      },
-      {
-        id:"sigma",
-        name:"Spaghetti Toiletti",
-        icon:`<img class="shopIconImg" src="${SPAGET_LOPO}" alt="Cursor">`,
-        desc:"Multiplies click power by 2 (stacks).",
-        type:"click_mult",
-        value:2,
-        baseCost:2000,
-        growth:1.22
-      },
+{
+  id:"auto",
+  name:{
+    en:"Coco Brainrot",
+    ru:"Коко Брейнрот"
+  },
+  desc:{
+    en:"Increases brainrot per second by 1.",
+    ru:"Увеличивает брейнрот в секунду на 1."
+  },
+  icon:`<img class="shopIconImg" src="${AUTO_LOGO}">`,
+  type:"bps",
+  value:1,
+  baseCost:100,
+  growth:1.17
+},
+
+{
+  id:"mine",
+  name:{
+    en:"Brainrot Tim",
+    ru:"Брейнрот Тим"
+  },
+  desc:{
+    en:"Increases brainrot per second by 10.",
+    ru:"Увеличивает брейнрот в секунду на 10."
+  },
+  icon:`<img class="shopIconImg" src="${TIM_LOGO}">`,
+  type:"bps",
+  value:10,
+  baseCost:500,
+  growth:1.18
+},
+
+{
+  id:"valk",
+  name:{
+    en:"Karkerkar Kurkur",
+    ru:"Каркеркар Куркур"
+  },
+  desc:{
+    en:"Increases brainrot per second by 100.",
+    ru:"Увеличивает брейнрот в секунду на 100."
+  },
+  icon:`<img class="shopIconImg" src="${KARKER_LOGO}">`,
+  type:"bps",
+  value:100,
+  baseCost:5000,
+  growth:1.19
+},
+
+{
+  id:"sigma",
+  name:{
+    en:"Spaghetti Toiletti",
+    ru:"Спагетти Туалетти"
+  },
+  desc:{
+    en:"Multiplies click power by 2 (stacks).",
+    ru:"Умножает силу клика на 2 (складывается)."
+  },
+  icon:`<img class="shopIconImg" src="${SPAGET_LOPO}">`,
+  type:"click_mult",
+  value:2,
+  baseCost:2000,
+  growth:1.22
+},
+
 {
   id:"sigma1",
-  name:"Graipuss Medussi",
-  icon:`<img class="shopIconImg" src="${JELLY_LOGO}" alt="Cursor">`,
-  desc:"Multiplies click power by 4 (stacks).",
+  name:{
+    en:"Graipuss Medussi",
+    ru:"Грайпусс Медусси"
+  },
+  desc:{
+    en:"Multiplies click power by 4 (stacks).",
+    ru:"Умножает силу клика на 4 (складывается)."
+  },
+  icon:`<img class="shopIconImg" src="${JELLY_LOGO}">`,
   type:"click_mult",
   value:4,
   baseCost:67000,
   growth:1.24
 },
+
 {
   id:"sixseven",
-  name:"Six-Seven",
-  icon:`<img class="shopIconImg" src="${SIX_SEV_LOGO}" alt="Cursor">`,
-  desc:"Multiplies click power by 6 (stacks).",
+  name:{
+    en:"Six-Seven",
+    ru:"Сикс-Севен"
+  },
+  desc:{
+    en:"Multiplies click power by 6 (stacks).",
+    ru:"Умножает силу клика на 6 (складывается)."
+  },
+  icon:`<img class="shopIconImg" src="${SIX_SEV_LOGO}">`,
   type:"click_mult",
   value:6,
   baseCost:670000,
@@ -1311,6 +1445,51 @@ function renderStats(){
   `;
 }
 
+
+function renderShop(){
+function render(){
+  const t = LANG[currentLang];
+
+  elCount.textContent = fmt(state.brainrot);
+  elBps.textContent = fmt(state.bps);
+
+  elRecordBar.textContent = `RECORD: ${fmt(state.record)} BRAINROT`;
+
+  shopEl.innerHTML = "";
+
+  ITEMS.forEach(item=>{
+    const price = cost(item);
+    const count = owned(item.id);
+
+    // ✅ FIX (VERY IMPORTANT)
+    const name = typeof item.name === "object" ? item.name[currentLang] : item.name;
+    const desc = typeof item.desc === "object" ? item.desc[currentLang] : item.desc;
+
+    const card = document.createElement("div");
+    card.className = "card";
+
+    card.innerHTML = `
+      <div class="icon">${item.icon}</div>
+      <div class="main">
+        <div class="name">${name}</div>
+        <div class="desc">${desc}</div>
+        <div class="desc" style="margin-top:8px; color: rgba(164,205,178,.9);">
+          ${t.owned}: ${count}
+        </div>
+      </div>
+      <div class="buy">
+        <button class="btn" ${state.brainrot < price ? "disabled" : ""}>
+          ${t.buy} ${fmt(price)}
+        </button>
+      </div>
+    `;
+
+    card.querySelector("button").onclick = () => buy(item);
+    shopEl.appendChild(card);
+  });
+}
+}
+
 function showAchievement(text){
   const el = document.createElement("div");
 
@@ -1355,41 +1534,43 @@ function showAchievement(text){
       if (state.brainrot > state.record) state.record = state.brainrot;
     }
 
-    function render(){
-      elCount.textContent = fmt(state.brainrot);
-      elBps.textContent = fmt(state.bps);
+function render(){
+  elCount.textContent = fmt(state.brainrot);
+  elBps.textContent = fmt(state.bps);
 
-      elRecordBar.textContent = `RECORD: 999999999999999999 BRAINROT BY: ANTHONY`;
+  elRecordBar.textContent = `RECORD: 999999999999999999 BRAINROT BY: ANTHONY`;
 
-      // shop
-      shopEl.innerHTML = "";
-      ITEMS.forEach(item=>{
-        const price = cost(item);
-        const count = owned(item.id);
+  shopEl.innerHTML = "";
 
-        const card = document.createElement("div");
-        card.className = "card";
+  ITEMS.forEach(item=>{
+    const price = cost(item);
+    const count = owned(item.id);
 
-        card.innerHTML = `
-          <div class="icon">${item.icon}</div>
-          <div class="main">
-            <div class="name">${item.name}</div>
-            <div class="desc">${item.desc}</div>
-            <div class="desc" style="margin-top:8px; color: rgba(164,205,178,.9);">
-              Owned: ${count}
-            </div>
-          </div>
-          <div class="buy">
-            <button class="btn" ${state.brainrot < price ? "disabled" : ""}>
-              Buy for ${fmt(price)}
-            </button>
-          </div>
-        `;
+    // 🔥 FIX
+    const name = typeof item.name === "object" ? item.name[currentLang] : item.name;
+    const desc = typeof item.desc === "object" ? item.desc[currentLang] : item.desc;
 
-        card.querySelector("button").onclick = () => buy(item);
-        shopEl.appendChild(card);
-      });
-    }
+    const card = document.createElement("div");
+    card.className = "card";
+
+    card.innerHTML = `
+      <div class="icon">${item.icon}</div>
+      <div class="main">
+        <div class="name">${name}</div>
+        <div class="desc">${desc}</div>
+        <div class="desc">Owned: ${count}</div>
+      </div>
+      <div class="buy">
+        <button class="btn" ${state.brainrot < price ? "disabled" : ""}>
+          Buy for ${fmt(price)}
+        </button>
+      </div>
+    `;
+
+    card.querySelector("button").onclick = () => buy(item);
+    shopEl.appendChild(card);
+  });
+}
 
     function floatText(text, x, y){
       const el = document.createElement("div");
@@ -4809,6 +4990,7 @@ adminCommandInput.addEventListener("keydown", (e) => {
  /* ✅ FIX your init at the bottom (replace your load() call with loadGame()) */
 recompute();
 render();
+applyLanguage();
 
 // load last selected character OR default
 
