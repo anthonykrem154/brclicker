@@ -944,6 +944,26 @@
     </button>
   </div>
 </div>
+<div id="adminPanel" style="display:none; padding:8px;">
+  <input id="adminTarget" placeholder="player name..."
+    style="width:100%; margin-bottom:6px; padding:6px;">
+  
+  <input id="adminAmount" placeholder="amount..."
+    style="width:100%; margin-bottom:6px; padding:6px;">
+
+  <button onclick="giveMoneyUI()" class="smallBtn" style="width:100%;">
+    GIVE MONEY 💰
+  </button>
+
+  <div id="adminPlayers" style="
+    max-height:120px;
+    overflow:auto;
+    border-top:1px solid rgba(255,255,255,.1);
+    padding:8px;
+    font-family:monospace;
+    font-size:13px;
+  "></div>
+</div>
 
 
 <div id="announcementBox" style="
@@ -965,6 +985,16 @@
   animation: fadeInOut 3s ease;
 ">
 </div>
+
+<div id="adminPlayers" style="
+  max-height:120px;
+  overflow:auto;
+  border-top:1px solid rgba(255,255,255,.1);
+  padding:8px;
+  font-family:monospace;
+  font-size:13px;
+"></div>
+
 
 <div id="adminConsole" style="
   display:none;
@@ -1044,6 +1074,16 @@
   box-shadow:0 20px 60px rgba(0,0,0,.5);
   z-index:9999;
   overflow:hidden;
+  #chatBox {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  z-index: 999;
+}
+
+#chatHeader {
+  cursor: move;
+}
 ">
   <div style="
     padding:10px 12px;
@@ -1302,6 +1342,48 @@ function loadGame(){
   }catch{}
 }
 
+dragElement(document.getElementById("chatBox"));
+
+function dragElement(elmnt) {
+  let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+  const header = document.getElementById("chatHeader");
+
+  if (header) {
+    header.onmousedown = dragMouseDown;
+  } else {
+    elmnt.onmousedown = dragMouseDown;
+  }
+
+  function dragMouseDown(e) {
+    e.preventDefault();
+
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+
+    document.onmouseup = stopDrag;
+    document.onmousemove = drag;
+  }
+
+  function drag(e) {
+    e.preventDefault();
+
+    pos1 = pos3 - e.clientX;
+    pos2 = pos4 - e.clientY;
+
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+
+    elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+    elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+  }
+
+  function stopDrag() {
+    document.onmouseup = null;
+    document.onmousemove = null;
+  }
+}
+
 function equipCharacter(char){
   currentCharacter = char.id;
 
@@ -1489,7 +1571,23 @@ function checkAchievements(){
   });
 }
 
+let chatVisible = true;
 
+document.addEventListener("keydown", function(e){
+  if(e.key === "F9"){
+    e.preventDefault(); // stops browser default
+
+    const chat = document.getElementById("chatBox");
+
+    chatVisible = !chatVisible;
+
+    if(chatVisible){
+      chat.style.display = "block";
+    } else {
+      chat.style.display = "none";
+    }
+  }
+});
 
 const overlay = document.getElementById("overlay");
 
@@ -1902,6 +2000,7 @@ function checkName(){
   }
 }
 
+
 let globalFreeze = false;
 
 db.ref("brainrotClicker/global/freeze").on("value", snap => {
@@ -1918,7 +2017,6 @@ function saveName(){
     return;
   }
 
-  // 🚫 BLOCK BAD NAMES
   if(containsBadWord(name)){
     alert("❌ you can't use that name");
     return;
@@ -1926,6 +2024,29 @@ function saveName(){
 
   playerName = name;
   localStorage.setItem("playerName", name);
+
+  // 🔥 CREATE PLAYER HERE (AFTER NAME EXISTS)
+  const playerRef = db.ref("brainrotClicker/players/" + playerName);
+db.ref("brainrotClicker/giveMoney/" + playerName).on("value", snap=>{
+  const data = snap.val();
+  if(!data) return;
+
+  state.brainrot += data.amount;
+
+  showAnnouncement("💰 +" + data.amount + " from ADMIN");
+
+  db.ref("brainrotClicker/giveMoney/" + playerName).remove();
+
+  render();
+});
+
+  playerRef.set({
+    name: playerName,
+    online: true,
+    lastSeen: Date.now()
+  });
+
+  playerRef.onDisconnect().remove();
 
   namePopup.style.display = "none";
 
@@ -1951,6 +2072,9 @@ function logAdmin(text){
   adminOutput.scrollTop = adminOutput.scrollHeight;
 }
 
+
+
+
 function openAdminConsole(){
   adminConsole.style.display = "block";
   setTimeout(() => adminCommandInput.focus(), 30);
@@ -1960,8 +2084,34 @@ function closeAdminConsole(){
   adminConsole.style.display = "none";
 }
 
+function tryAdminPassword(){
+  if(adminPasswordInput.value === ADMIN_PASSWORD){
+    adminUnlocked = true;
 
+    document.getElementById("adminPanel").style.display = "block"; // ✅ ADD THIS
 
+    chatClearBtn.style.display = "inline-block";
+    closeAdminPassword();
+    openAdminConsole();
+  }
+}
+
+function giveMoneyUI(){
+  const name = document.getElementById("adminTarget").value;
+  const amount = Number(document.getElementById("adminAmount").value);
+
+  if(!name || isNaN(amount)){
+    alert("enter name + amount");
+    return;
+  }
+
+  db.ref("brainrotClicker/giveMoney/" + name).set({
+    amount: amount,
+    time: Date.now()
+  });
+
+  alert("gave " + amount + " to " + name);
+}
 
 function runAdminCommand(raw){
   const parts = raw.trim().toLowerCase().split(" ");
@@ -2011,6 +2161,22 @@ else if(cmd === "superclicks"){
   });
 
   logAdmin("GLOBAL SUPER CLICKS ENABLED ⚡");
+}
+else if(cmd === "givemoney"){
+  const target = parts[1];
+  const amount = Number(parts[2]);
+
+  if(!target || isNaN(amount)){
+    logAdmin("usage: givemoney username amount");
+    return;
+  }
+
+  db.ref("brainrotClicker/giveMoney/" + target).set({
+    amount: amount,
+    time: Date.now()
+  });
+
+  logAdmin("gave " + amount + " to " + target);
 }
 
 else if(cmd === "superclicksoff"){
@@ -2206,6 +2372,39 @@ adminCommandInput.addEventListener("keydown", (e) => {
   }
 });
 
+ 
+
+
+const adminPlayers = document.getElementById("adminPlayers");
+const adminTarget = document.getElementById("adminTarget"); // 🔥 THIS WAS MISSING
+
+db.ref("brainrotClicker/players").on("value", (snap)=>{
+  adminPlayers.innerHTML = "";
+
+  const data = snap.val();
+  if(!data) return;
+
+  Object.values(data).forEach(p=>{
+    const div = document.createElement("div");
+
+    div.textContent = "👤 " + p.name;
+
+    div.style.padding = "6px";
+    div.style.cursor = "pointer";
+    div.style.borderBottom = "1px solid rgba(255,255,255,.1)";
+
+    // 🔥 THIS IS THE IMPORTANT PART YOU DIDN’T HAVE
+    div.onclick = () => {
+      adminTarget.value = p.name;
+
+      // little click animation
+      div.style.background = "rgba(126,231,255,.15)";
+      setTimeout(()=> div.style.background="transparent", 200);
+    };
+
+    adminPlayers.appendChild(div);
+  });
+});
 const BAD_WORDS = [
   "2 girls 1 cup",
   "2g1c",
