@@ -663,6 +663,91 @@
   background: #1e4f8a;  /* same blue */
   color: white;
 }
+/* 🔥 MOBILE CHAT FIX */
+@media (max-width: 768px){
+
+  #chatBox{
+    width: 92vw !important;
+    left: 4vw !important;
+    bottom: 10px !important;
+    border-radius: 12px;
+  }
+
+  #chatMessages{
+    height: 120px !important;
+    font-size: 11px !important;
+    padding: 8px !important;
+  }
+
+  #chatInput{
+    font-size: 11px !important;
+    padding: 8px !important;
+  }
+
+  #chatSendBtn,
+  #chatClearBtn{
+    font-size: 10px !important;
+    padding: 8px 10px !important;
+  }
+}
+@media (max-width: 768px){
+  .clickZone{
+    height: 260px !important;
+  }
+
+  .brainrotImg{
+    width: 180px !important;
+  }
+}
+@media (max-width: 768px){
+
+  .card{
+    flex-direction: row;
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .icon{
+    width: 40px;
+    height: 40px;
+  }
+
+  .name{
+    font-size: 10px;
+  }
+
+  .desc{
+    font-size: 11px;
+  }
+
+  .btn{
+    font-size: 9px;
+    padding: 8px;
+  }
+}
+@media (max-width: 768px){
+
+  body{
+    font-size: 12px;
+  }
+
+  .layout{
+    padding: 8px;
+    gap: 10px;
+  }
+
+  .top{
+    padding: 10px;
+  }
+
+  .bigCount{
+    font-size: 24px;
+  }
+
+  .recordBar{
+    font-size: 10px;
+  }
+}
   </style>
 </head>
 <body>
@@ -1078,7 +1163,7 @@ function applyLanguage(){
   const musicBtn = document.getElementById("musicBtn");
   if(musicBtn) musicBtn.textContent = t.music;
 
-  renderShop(); // 🔥 VERY IMPORTANT
+  render();
 }
 
 
@@ -1203,12 +1288,8 @@ function updateNameDisplay(){
 /* ✅ ADD these save/load functions (you were calling SAVE_KEY + saveGame but they weren't defined) */
 const SAVE_KEY = "brainrot_clicker_save_v2";
 
-function saveGame(){
-
-}
-
 function loadGame(){
-
+  const raw = localStorage.getItem(SAVE_KEY);
   if(!raw) return;
   try{
     const data = JSON.parse(raw);
@@ -1219,19 +1300,6 @@ function loadGame(){
       unlockedChars: data.unlockedChars || { tung:true }
     };
   }catch{}
-}
-
-function equipCharacter(char){
-  currentCharacter = char.id;
-
-  const img = document.querySelector(".brainrotImg");
-  img.src = char.img;
-
-  const w = Number(char.size) || 420;
-  img.style.width = w + "px";
-  img.style.maxWidth = "80%";
-
- 
 }
 
 function equipCharacter(char){
@@ -1385,7 +1453,7 @@ function equipCharacter(char){
   type:"click_mult",
   value:6,
   baseCost:670000,
-  growth:1.24
+  growth:2
 }
     ];
 
@@ -1446,49 +1514,6 @@ function renderStats(){
 }
 
 
-function renderShop(){
-function render(){
-  const t = LANG[currentLang];
-
-  elCount.textContent = fmt(state.brainrot);
-  elBps.textContent = fmt(state.bps);
-
-  elRecordBar.textContent = `RECORD: ${fmt(state.record)} BRAINROT`;
-
-  shopEl.innerHTML = "";
-
-  ITEMS.forEach(item=>{
-    const price = cost(item);
-    const count = owned(item.id);
-
-    // ✅ FIX (VERY IMPORTANT)
-    const name = typeof item.name === "object" ? item.name[currentLang] : item.name;
-    const desc = typeof item.desc === "object" ? item.desc[currentLang] : item.desc;
-
-    const card = document.createElement("div");
-    card.className = "card";
-
-    card.innerHTML = `
-      <div class="icon">${item.icon}</div>
-      <div class="main">
-        <div class="name">${name}</div>
-        <div class="desc">${desc}</div>
-        <div class="desc" style="margin-top:8px; color: rgba(164,205,178,.9);">
-          ${t.owned}: ${count}
-        </div>
-      </div>
-      <div class="buy">
-        <button class="btn" ${state.brainrot < price ? "disabled" : ""}>
-          ${t.buy} ${fmt(price)}
-        </button>
-      </div>
-    `;
-
-    card.querySelector("button").onclick = () => buy(item);
-    shopEl.appendChild(card);
-  });
-}
-}
 
 function showAchievement(text){
   const el = document.createElement("div");
@@ -1519,26 +1544,41 @@ function showAchievement(text){
 
 
 
-    function recompute(){
-      // click power = base + cursor upgrades, times multipliers
-      const cursorCount = owned("cursor");
-      state.clickPower = (1 + cursorCount) * state.clickMult;
+function recompute(){
 
-      // bps from auto + mine + valk
-      const auto = owned("auto") * 1;
-      const mine = owned("mine") * 10;
-      const valk = owned("valk") * 100;
-      state.bps = auto + mine + valk;
+  const cursorCount = owned("cursor");
 
-      // record
-      if (state.brainrot > state.record) state.record = state.brainrot;
-    }
+  // BASE CLICK POWER
+  let baseClick = 1 + cursorCount;
 
+  // MULTIPLIERS (RECALCULATED EVERY TIME)
+  let mult = 1;
+
+  mult *= Math.pow(2, owned("sigma"));     // x2
+  mult *= Math.pow(4, owned("sigma1"));    // x4
+  mult *= Math.pow(6, owned("sixseven"));  // x6
+
+  state.clickMult = mult;
+
+  state.clickPower = baseClick * mult;
+
+  // BPS
+  state.bps =
+    owned("auto") * 1 +
+    owned("mine") * 10 +
+    owned("valk") * 100;
+
+  if (state.brainrot > state.record){
+    state.record = state.brainrot;
+  }
+}
 function render(){
+  const t = LANG[currentLang];
+
   elCount.textContent = fmt(state.brainrot);
   elBps.textContent = fmt(state.bps);
 
-  elRecordBar.textContent = `RECORD: 999999999999999999 BRAINROT BY: ANTHONY`;
+  elRecordBar.textContent = `RECORD: ${fmt(state.record)} BRAINROT`;
 
   shopEl.innerHTML = "";
 
@@ -1546,7 +1586,6 @@ function render(){
     const price = cost(item);
     const count = owned(item.id);
 
-    // 🔥 FIX
     const name = typeof item.name === "object" ? item.name[currentLang] : item.name;
     const desc = typeof item.desc === "object" ? item.desc[currentLang] : item.desc;
 
@@ -1558,11 +1597,11 @@ function render(){
       <div class="main">
         <div class="name">${name}</div>
         <div class="desc">${desc}</div>
-        <div class="desc">Owned: ${count}</div>
+        <div class="desc">${t.owned}: ${count}</div>
       </div>
       <div class="buy">
         <button class="btn" ${state.brainrot < price ? "disabled" : ""}>
-          Buy for ${fmt(price)}
+          ${t.buy} ${fmt(price)}
         </button>
       </div>
     `;
@@ -1648,7 +1687,6 @@ function clickGain(e){
         // handled by recompute via counts
       } else if (item.type === "click_mult"){
         // multiply click mult each purchase
-        state.clickMult *= item.value;
         state.clickMult = clamp(state.clickMult, 1, 1024);
       }
 
@@ -1921,6 +1959,9 @@ function openAdminConsole(){
 function closeAdminConsole(){
   adminConsole.style.display = "none";
 }
+
+
+
 
 function runAdminCommand(raw){
   const parts = raw.trim().toLowerCase().split(" ");
