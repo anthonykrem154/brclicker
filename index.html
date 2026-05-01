@@ -1258,6 +1258,7 @@ const KARKER_LOGO = "https://tr.rbxcdn.com/180DAY-8a6e9e223e46a9abfeda6649b5316c
 const SPAGET_LOPO = "https://cdn.gameboost.com/itemoffers/49445/gallery/conversions/fe5007f5-3b73-4757-8dc0-36defb27d6b8-webp.webp?v=1760398922";
 const JELLY_LOGO = "https://tr.rbxcdn.com/180DAY-91516711cd409754e140c20153a0155e/420/420/BackAccessory/Webp/noFilter";
 const SIX_SEV_LOGO = "https://tr.rbxcdn.com/180DAY-652828d331013309a54bd152e5a70de8/420/420/BackAccessory/Webp/noFilter";
+const ketup_logo = "https://files.catbox.moe/7y39rw.png";
 const CHARACTERS = [
   {
     id: "tung",
@@ -1460,7 +1461,7 @@ function equipCharacter(char){
   icon:`<img class="shopIconImg" src="${SPAGET_LOPO}">`,
   type:"click_mult",
   value:2,
-  baseCost:2000,
+  baseCost:7000,
   growth:1.22
 },
 
@@ -1496,6 +1497,22 @@ function equipCharacter(char){
   value:6,
   baseCost:670000,
   growth:2
+},
+{
+  id:"ketup",
+  name:{
+    en:"Ketchuru and Musturu",
+    ru:"Кечуру и Мустуру"
+  },
+  desc:{
+    en:"Multiplies click power by 8 (stacks).",
+    ru:"Умножает силу клика на 8 (складывается)."
+  },
+  icon:`<img class="shopIconImg" src="${ketup_logo}">`,
+  type:"click_mult",
+  value:7,
+  baseCost:870000,
+  growth:2.5
 }
     ];
 
